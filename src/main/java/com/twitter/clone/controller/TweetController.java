@@ -1,6 +1,7 @@
 package com.twitter.clone.controller;
 
 import com.twitter.clone.dto.TweetDTO;
+import com.twitter.clone.entity.User;
 import com.twitter.clone.exception.TwitterException;
 import com.twitter.clone.service.TweetService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,5 +80,23 @@ public class TweetController {
         return new ResponseEntity<>("Undo retweet",HttpStatus.OK);
     }
 
+    @PostMapping("/reply/{tweetId}")
+    public ResponseEntity<TweetDTO> replyTweet(@Valid @RequestBody TweetDTO tweetDTO,
+        @PathVariable(value = "tweetId") @Min(value = 1) Long tweetId) throws TwitterException{
+        TweetDTO reply = tweetService.replyTweet(tweetDTO,tweetId);
+        return new ResponseEntity<>(reply,HttpStatus.CREATED);
+    }
+
+    @GetMapping("/likes/{tweetId}")
+    public ResponseEntity<List<User>> getLikeUsers(@PathVariable(value = "tweetId") @Min(value = 1) Long tweetId) throws TwitterException{
+        List<User> userList = tweetService.getLikeUsers(tweetId);
+        return new ResponseEntity<>(userList,HttpStatus.OK);
+    }
+
+    @GetMapping("/retweets/{tweetId}")
+    public ResponseEntity<List<User>> getRetweetUsers(@PathVariable(value = "tweetId") @Min(value = 1) Long tweetId) throws TwitterException{
+        List<User> userList = tweetService.getRetweetUsers(tweetId);
+        return new ResponseEntity<>(userList,HttpStatus.OK);
+    }
 
 }
