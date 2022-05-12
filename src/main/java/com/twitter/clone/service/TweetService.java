@@ -1,6 +1,7 @@
 package com.twitter.clone.service;
 
 import com.twitter.clone.dto.TweetDTO;
+import com.twitter.clone.dto.UserDTO;
 import com.twitter.clone.entity.User;
 import com.twitter.clone.exception.TwitterException;
 
@@ -16,6 +17,6 @@ public interface TweetService {
     void dislikeTweet(Long tweetId,Long userId) throws TwitterException;
     TweetDTO retweet(Long tweetId,Long userId) throws TwitterException;
     void undoRetweet(Long tweetId,Long userId) throws TwitterException;
-    List<User> getLikeUsers(Long tweetId) throws TwitterException;
-    List<User> getRetweetUsers(Long tweetId) throws TwitterException;
+    List<UserDTO> getLikeUsers(Long tweetId) throws TwitterException;
+    List<UserDTO> getRetweetUsers(Long tweetId) throws TwitterException;
 }

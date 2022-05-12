@@ -1,6 +1,7 @@
 package com.twitter.clone.controller;
 
 import com.twitter.clone.dto.TweetDTO;
+import com.twitter.clone.dto.UserDTO;
 import com.twitter.clone.entity.User;
 import com.twitter.clone.exception.TwitterException;
 import com.twitter.clone.service.TweetService;
@@ -45,13 +46,6 @@ public class TweetController {
         return new ResponseEntity<>("Tweet Deleted",HttpStatus.OK);
     }
 
-    @PostMapping("/reply/{replyId}")
-    public ResponseEntity<TweetDTO> retweet(@Valid @RequestBody TweetDTO tweetDTO,@PathVariable(value = "replyId") @Min(value = 1) Long replyId) throws TwitterException {
-        System.out.println(replyId);
-        TweetDTO savedTweet = tweetService.replyTweet(tweetDTO,replyId);
-        return new ResponseEntity<>(savedTweet, HttpStatus.CREATED);
-    }
-
     @GetMapping("/like/{tweetId}/{userId}")
     public ResponseEntity<String> likeTweet(@PathVariable(value = "tweetId") @Min(value = 1) Long tweetId,
         @PathVariable(value = "userId") @Min(value = 1) Long userId ) throws TwitterException{
@@ -88,14 +82,14 @@ public class TweetController {
     }
 
     @GetMapping("/likes/{tweetId}")
-    public ResponseEntity<List<User>> getLikeUsers(@PathVariable(value = "tweetId") @Min(value = 1) Long tweetId) throws TwitterException{
-        List<User> userList = tweetService.getLikeUsers(tweetId);
+    public ResponseEntity<List<UserDTO>> getLikeUsers(@PathVariable(value = "tweetId") @Min(value = 1) Long tweetId) throws TwitterException{
+        List<UserDTO> userList = tweetService.getLikeUsers(tweetId);
         return new ResponseEntity<>(userList,HttpStatus.OK);
     }
 
     @GetMapping("/retweets/{tweetId}")
-    public ResponseEntity<List<User>> getRetweetUsers(@PathVariable(value = "tweetId") @Min(value = 1) Long tweetId) throws TwitterException{
-        List<User> userList = tweetService.getRetweetUsers(tweetId);
+    public ResponseEntity<List<UserDTO>> getRetweetUsers(@PathVariable(value = "tweetId") @Min(value = 1) Long tweetId) throws TwitterException{
+        List<UserDTO> userList = tweetService.getRetweetUsers(tweetId);
         return new ResponseEntity<>(userList,HttpStatus.OK);
     }
 

@@ -1,6 +1,7 @@
 package com.twitter.clone.service;
 
 import com.twitter.clone.dto.TweetDTO;
+import com.twitter.clone.dto.UserDTO;
 import com.twitter.clone.entity.Tweet;
 import com.twitter.clone.entity.User;
 import com.twitter.clone.exception.TwitterException;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -78,25 +80,22 @@ public class TweetServiceImpl implements TweetService{
     @Override
     @Transactional @Modifying
     public void deleteTweet(Long tweetId) throws TwitterException{
-        Optional<Tweet> optionalTweet = tweetRepository.findById(tweetId);
-        if(optionalTweet.isEmpty()){
-            throw new TwitterException("Invalid Tweet Id");
-        }
-        Tweet tweet = optionalTweet.get();
+        Tweet tweet = tweetRepository.findById(tweetId).orElseThrow(()->new TwitterException("Invalid Tweet Id"));
 
         //If it is a retweet then we call undo retweet method
         if(tweet.getRetweetStatus() != null){
             undoRetweet(tweet.getRetweetStatus().getId(),tweet.getUser().getId());
             return;
         }
-        for(User user : tweet.getRetweetUsers()){
-            user.getRetweets().remove(tweet);
+        //Remove entry from retweet table
+        for(User user : new HashSet<>(tweet.getRetweetUsers())){
+            tweet.removeRetweetUser(user);
         }
-        tweet.removeRetweetUsers();
-        for(User user : tweet.getLikeUsers()){
-            user.getLikedTweets().remove(tweet);
+        //Remove entry from tweets_liked table
+        for(User user : new HashSet<>(tweet.getLikeUsers())){
+            tweet.removeLikeUser(user);
         }
-        tweet.removeLikeUsers();
+
         tweetRepository.delete(tweet);
     }
 
@@ -160,22 +159,23 @@ public class TweetServiceImpl implements TweetService{
 
     @Override @Transactional @Modifying
     public TweetDTO retweet(Long tweetId,Long userId) throws TwitterException{
-        Optional<Tweet> optionalTweet = tweetRepository.findById(tweetId);
-        if(optionalTweet.isEmpty()){
-            throw new TwitterException("Invalid Tweet Id");
-        }
+        Tweet tweet = tweetRepository.findById(tweetId).orElseThrow(()->new TwitterException("Invalid Tweet Id"));
         User user = getUser(userId);
-        Tweet tweet = optionalTweet.get();
+        //If the tweet is a retweet itself
         if(tweet.getRetweetStatus() != null){
+            //Then we set tweet to the original tweet
             tweet = tweet.getRetweetStatus();
         }
+        //If user has already retweeted the original tweet we simply return
         if(user.getRetweets().contains(tweet)){
             return tweetRepository.findById(tweet.getId()).orElseThrow().toTweetDTO();
         }
+        //Retweet is a new tweet
         Tweet retweet = new Tweet();
         retweet.setUser(user);
         retweet.setRetweetStatus(tweet);
         retweet.setText(tweet.getText());
+        //Create entry in retweet table;
         tweet.addRetweetUser(user);
         userRepository.save(user);
         TweetDTO tweetDTO = tweetRepository.save(retweet).toTweetDTO();
@@ -185,28 +185,27 @@ public class TweetServiceImpl implements TweetService{
 
     @Override @Transactional @Modifying
     public void undoRetweet(Long tweetId,Long userId) throws TwitterException{
-        Optional<Tweet> optionalTweet = tweetRepository.findById(tweetId);
-        if(optionalTweet.isEmpty()){
-            throw new TwitterException("Invalid Tweet Id");
-        }
+        Tweet tweet = tweetRepository.findById(tweetId).orElseThrow(()->new TwitterException("Invalid Tweet Id"));
         User user = getUser(userId);
-        Tweet tweet = optionalTweet.get();
+        //Remove entry from retweet table
         tweet.removeRetweetUser(user);
+        //Get the retweet
+        Tweet retweet = tweetRepository.findByRetweetStatusAndUser(tweet,user);
+        //Delete the retweet
+        tweetRepository.delete(retweet);
         userRepository.save(user);
         tweetRepository.save(tweet);
-        Tweet retweet = tweetRepository.findByRetweetStatusAndUser(tweet,user);
-        tweetRepository.delete(retweet);
     }
 
-    public int getFavouriteCount(Tweet tweet){
-        return tweet.getLikeUsers() != null ? tweet.getLikeUsers().size() : 0;
+    public long getFavouriteCount(Tweet tweet){
+        return tweet.getLikeUsers() != null ? tweet.getLikeUsers().size() : 0L;
     }
 
-    public int getRetweetCount(Tweet tweet){
-        return tweet.getRetweetUsers() != null ? tweet.getRetweetUsers().size() : 0;
+    public long getRetweetCount(Tweet tweet){
+        return tweet.getRetweetUsers() != null ? tweet.getRetweetUsers().size() : 0L;
     }
 
-    public int getReplyCount(Tweet tweet) {
+    public long getReplyCount(Tweet tweet) {
         List<Tweet> replies = tweetRepository.findByRepliedTweet(tweet);
         return replies.size();
     }
@@ -217,13 +216,15 @@ public class TweetServiceImpl implements TweetService{
         savedTweetDTO.setRetweetCount(getRetweetCount(tweet.getRetweetStatus() == null ? tweet : tweet.getRetweetStatus()));
     }
 
-    public List<User> getLikeUsers(Long tweetId) throws TwitterException{
+    @Override
+    public List<UserDTO> getLikeUsers(Long tweetId) throws TwitterException{
         Tweet tweet = tweetRepository.findById(tweetId).orElseThrow(()-> new TwitterException("Invalid Tweet Id"));
-        return new ArrayList<>(tweet.getLikeUsers());
+        return tweet.getLikeUsers().stream().map(User::toUserDTO).collect(Collectors.toList());
     }
 
-    public List<User> getRetweetUsers(Long tweetId) throws TwitterException{
-        Tweet tweet = tweetRepository.findById(tweetId).orElseThrow(()-> new TwitterException("Invalid Tweet Id"));
-        return new ArrayList<>(tweet.getRetweetUsers());
+    @Override
+    public List<UserDTO> getRetweetUsers(Long tweetId) throws TwitterException {
+        Tweet tweet = tweetRepository.findById(tweetId).orElseThrow(() -> new TwitterException("Invalid Tweet Id"));
+        return tweet.getRetweetUsers().stream().map(User::toUserDTO).collect(Collectors.toList());
     }
 }

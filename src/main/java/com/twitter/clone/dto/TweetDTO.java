@@ -18,9 +18,9 @@ public class TweetDTO {
 
     private Long repliedTweetId;
     private Long repliedUserId;
-    private int replyCount;
-    private int retweetCount;
-    private int favoriteCount;
+    private long replyCount;
+    private long retweetCount;
+    private long favoriteCount;
 
     @Min(value = 1,message = "Invalid Tweet Id")
     private Long retweetStatus;

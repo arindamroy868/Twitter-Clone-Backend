@@ -56,10 +56,6 @@ public class Tweet {
         user.getRetweets().remove(this);
     }
 
-    public void removeRetweetUsers(){
-        this.retweetUsers = null;
-    }
-
     public void addLikeUser(User user){
         if(likeUsers == null) likeUsers = new HashSet<>();
         likeUsers.add(user);
@@ -69,10 +65,6 @@ public class Tweet {
     public void removeLikeUser(User user){
         likeUsers.remove(user);
         user.getLikedTweets().remove(this);
-    }
-
-    public void removeLikeUsers(){
-        this.likeUsers = null;
     }
 
     public TweetDTO toTweetDTO(){

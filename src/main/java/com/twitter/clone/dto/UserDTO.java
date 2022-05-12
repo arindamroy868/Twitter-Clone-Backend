@@ -5,8 +5,6 @@ import lombok.*;
 
 import javax.validation.constraints.*;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
 
 @Getter @Setter @NoArgsConstructor @ToString @EqualsAndHashCode
 public class UserDTO {
@@ -25,19 +23,16 @@ public class UserDTO {
 
     private boolean _protected;
     private boolean verified;
-    private int followersCount;
-    private int friendsCount;
-    private int statusesCount;
+    private long followingCount;
+    private long followersCount;
+    private long tweetsCount;
+    private long likesCount;
     private LocalDateTime createdAt;
 
     @Email
     @NotBlank(message = "Email should not be blank")
     @Size(min = 5,max = 50)
     private String email;
-
-    private List<Long> userFollowing;
-    private List<Long> retweets;
-    private List<Long> likedTweets;
 
     public User toUser(){
         User user = new User();

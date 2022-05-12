@@ -29,6 +29,7 @@ public class User {
     @Column(name = "_protected",nullable = false)
     private Boolean _protected = false;
 
+
     @Column(name = "verified",nullable = false)
     private Boolean verified = false;
 
@@ -46,6 +47,9 @@ public class User {
             joinColumns = @JoinColumn(name = "follower_id", referencedColumnName = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "following_id", referencedColumnName = "user_id"))
     private Set<User> following = new HashSet<>();
+
+    @ManyToMany(mappedBy = "following")
+    private Set<User> followers = new HashSet<>();
 
     @ManyToMany
     @JoinTable(name = "tweets_liked",
@@ -68,10 +72,24 @@ public class User {
         userDTO.setName(getName());
         userDTO.setScreenName(getScreenName());
         userDTO.setEmail(getEmail());
-        userDTO.setUserFollowing(following.stream().map(User::getId).collect(Collectors.toList()));
-        userDTO.setRetweets(retweets.stream().map(Tweet::getId).collect(Collectors.toList()));
-        userDTO.setLikedTweets(likedTweets.stream().map(Tweet::getId).collect(Collectors.toList()));
         return userDTO;
+    }
+    public void addFollowing(User following){
+        this.getFollowing().add(following);
+        following.getFollowers().add(this);
+    }
+    public void removeFollowing(User following){
+        this.following.remove(following);
+        following.getFollowers().remove(this);
+    }
+
+    public void removeFollowings(){ this.following = null; }
+    public void removeFollowers(){ this.followers = null; }
+    public void removeLikedTweets(){
+        this.likedTweets = null;
+    }
+    public void removeRetweets(){
+        this.retweets = null;
     }
 
     @Override
