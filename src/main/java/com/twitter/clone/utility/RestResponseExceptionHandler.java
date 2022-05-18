@@ -30,11 +30,11 @@ public class RestResponseExceptionHandler {
         return new ResponseEntity<>(error,HttpStatus.BAD_REQUEST);
     }
 
-//    @ExceptionHandler(value = Exception.class)
-//    protected  ResponseEntity<ErrorFormat> genericExceptionHandler(Exception e){
-//        ErrorFormat error = new ErrorFormat("Something bad happened on server",
-//                HttpStatus.INTERNAL_SERVER_ERROR.value(),LocalDateTime.now());
-//        return new ResponseEntity<>(error,HttpStatus.INTERNAL_SERVER_ERROR);
-//    }
+    @ExceptionHandler(value = Exception.class)
+    protected  ResponseEntity<ErrorFormat> genericExceptionHandler(Exception e){
+        ErrorFormat error = new ErrorFormat("Something bad happened on server",
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),LocalDateTime.now());
+        return new ResponseEntity<>(error,HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
 }
